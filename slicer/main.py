@@ -1,36 +1,76 @@
- # open file
- file = open(input_name, 'r')
- # empty list of rows
- rows = []
+#Globals
+input_name = "ADCP.csv"
+# output_name = "test.csv"
+output_name = "SlicedADCP.csv"
+
+polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
+constant = []
+multiple = []
+
+lat_col = ''
+lon_col = ''
+
+lats = [coord[0] for coord in polygon]
+lons = [coord[1] for coord in polygon]
+
+def point_in_polygon(lat, lon):
+    
+    j = len(polygon) - 1
+    
+    odd_nodes = False
+
+    for i, coord in enumerate(polygon):
+        if ((lons[i] < lon) and (lons[j] >= lon) or ((lons[j] < lon) and (lons[i] >= lon))):
+            if (((lats[i] + lon - lons[i]) / (lons[j] - lons[i]) * (lats[j] - lats[i])) < lat):
+                odd_nodes = True
+        j = i
+
+    return odd_nodes
+
+# open file
+file = open(input_name, 'r')
+
+# create / open output file in write mode
+fout = open(output_name, 'w')
+    
+# empty list of rows
+rows = []
       
- for line in file:
+for index, line in enumerate(file):
     # empty row of attributes
     row = []
         
     current_row = line.split(',')
     
-    # find lat / long for given CSV file in header row
-    if line == 0:
-        for label in current_row:
+    # find lat / long column for given CSV file in header row
+    # assumption that header is present
+    if index == 0:
+        for index, label in enumerate(current_row):
             if label == "latitude":
-                lat = 
-            if label == "longitude"
+                lat_col = index 
+            if label == "longitude":
+                lon_col = index
+        fout.write(line)
+        #fout.write('\n')
+        # move to first data row
+        continue
+        
+    lat = float(current_row[lat_col])
+    lon = float(current_row[lon_col])
 
-    
-        
-    lat = current_row[0]
-    row.append(lat)
-    lon = current_row[1]
-    row.append(lon)
-    depth = current_row[3]
-    row.append(depth)
-    salinity = current_row[6]
-    row.append(salinity)
-    temperature = current_row[5]
-    row.append(temperature)
-    sound_speed = current_row[7]
-    row.append(sound_speed)
-        
-    rows.append(row)
+
+    # add header information to XML file
+    if point_in_polygon(lat, lon) is True:
+#         fout.write(str(lat) + ',' + str(lon) + ', True,' + str(lat) + ',' + str(lon) + '\n')
+        fout.write(line)
+      #  fout.write('\n')
+#     else:
+#         fout.write(str(lat) + ',' + str(lon) + '\n')
+
         
 file.close()
+fout.close()
+
+
+
+
