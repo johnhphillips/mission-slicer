@@ -1,7 +1,7 @@
 #Globals
 input_name = "ADCP.csv"
 # output_name = "test.csv"
-output_name = "SlicedADCP.csv"
+output_name = "SlicedADCP1.csv"
 
 polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
 constant = []
@@ -35,6 +35,8 @@ fout = open(output_name, 'w')
     
 # empty list of rows
 rows = []
+
+prev_value = False
       
 for index, line in enumerate(file):
     # empty row of attributes
@@ -57,16 +59,23 @@ for index, line in enumerate(file):
         
     lat = float(current_row[lat_col])
     lon = float(current_row[lon_col])
-
-
+    
+    cur_value = point_in_polygon(lat, lon)
+    
+    if index == 1:
+        pre_value = cur_value
+    
     # add header information to XML file
-    if point_in_polygon(lat, lon) is True:
+    if cur_value is True:
 #         fout.write(str(lat) + ',' + str(lon) + ', True,' + str(lat) + ',' + str(lon) + '\n')
         fout.write(line)
+        pre_value = cur_value
       #  fout.write('\n')
 #     else:
 #         fout.write(str(lat) + ',' + str(lon) + '\n')
-
+    if cur_value is False and pre_value is True:
+        fout.write("-----\n") 
+        pre_value = False
         
 file.close()
 fout.close()
