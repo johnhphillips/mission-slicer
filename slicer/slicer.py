@@ -1,14 +1,44 @@
+import myattributes as MA
+import xml.etree.ElementTree as ET
+
 #Globals
 input_name = "ADCP.csv"
 # output_name = "test.csv"
 output_name = "SlicedADCP1.csv"
 
-polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
+polygon = []
+#polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
 constant = []
 multiple = []
 
 lat_col = ''
 lon_col = ''
+
+lats = []
+lons = []
+
+# function for parsing polygon XML file
+def polygon_parser(input_name):  
+    
+    message = ET.ElementTree(file = input_name)
+    #TODO: Check that this is a valid file
+    for coords in message.iter(tag = MA.XML_contact):
+        # list to hold polygon coordinates
+        coord = []
+        
+        for attribute in coords.iter():
+#             
+#             if attribute.tag == MA.XML_contact:
+#                 # add ID to contact attribute list
+#                 contact.append(str(attribute.attrib[MA.XML_contact_id]))
+#                 
+#             if attribute.tag == MA.XML_contact_crn:
+#                 # add CRN to contact attribute list
+#                 contact.append(attribute.text)
+#                 
+#             
+#         
+#         contacts.append(contact)        
 
 lats = [coord[0] for coord in polygon]
 lons = [coord[1] for coord in polygon]
@@ -79,6 +109,8 @@ for index, line in enumerate(file):
         
 file.close()
 fout.close()
+
+
 
 
 
