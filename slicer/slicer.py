@@ -1,10 +1,8 @@
 import myattributes as MA
 import xml.etree.ElementTree as ET
 
-#Globals
 input_name = "ADCP.csv"
-# output_name = "test.csv"
-output_name = "SlicedADCP1.csv"
+output_name = "Sliced_" + input_name
 
 polygon = []
 #polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
