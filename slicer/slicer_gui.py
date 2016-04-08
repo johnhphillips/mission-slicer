@@ -19,7 +19,6 @@ import tkMessageBox
 import tkFileDialog
 
 from subprocess import Popen
-
 import slicer
 
 class Main_Application(object):
@@ -28,10 +27,9 @@ class Main_Application(object):
     def __init__(self, master):
         self.master = master
         
-        self._max_input = 10
+        self._max_input = 1
         self._filename_default = 'No file selected'
-        
-        self._threshold = 0
+        self._output_prefix = 'Sliced_'
         
         self._Input_Frames = []
         self._polygon = self._filename_default
@@ -59,36 +57,25 @@ class Main_Application(object):
         self.bottom_frame = tk.Frame(self.master)
         self.bottom_frame.grid(row=2, column=0)
         
-#         # Populate the bottom frame
-#         self.save_file_button = tk.Button(self.bottom_frame, text="Save As", height=1, width=20, command = self.save_filename)
-#         self.save_file_button.grid(row=0, column=0, padx=10, pady=10)
-# 
-#         self.save_filename_text = tk.StringVar()
-#         tk.Label(self.bottom_frame, textvariable = self.save_filename_text, relief=tk.GROOVE, height=1, width=20).grid(row=0, column=1, padx=10, pady=10)
-#         self.save_filename_text.set(self._save_filename)
-
+        # Populate the bottom frame
         self.slice_button = tk.Button(self.bottom_frame, text="Slice", height=1, width=20, command=self.slice_files)
         self.slice_button.grid(row=1, column=0, padx=10, pady=10)
 
         self.add_file_button = tk.Button(self.bottom_frame, text="Add Input CSV File", height=1, width=20, command=self.new_Input_Frame)
         self.add_file_button.grid(row=1, column=1, padx=10, pady=10)
-
-#         threshold_label = tk.Label(self.bottom_frame, text="TEMP LABEL")
-#         threshold_label.grid(row=2, column=0, padx=10, pady=10)
-# 
-#         self.threshold = tk.Text(self.bottom_frame, height=1, width=18)
-#         self.threshold.grid(row=2, column=1, padx=10, pady=10)
-#         self.threshold.insert(tk.END, self._threshold)
         
     def open_filename(self):
-        filename = tkFileDialog.askopenfilename(filetypes = (("All files", "*.*")
-                                                         ,("Mission CSV files", "*.CSV")))
+        filename = tkFileDialog.askopenfilename(filetypes = (("XML files", "*.XML")
+                                                         ,("All files", "*.*")))
     
         if len(filename) > 0:
+            self._polygon = filename
             filename = filename.split('/')
             filename = filename[len(filename) - 1]
+            if len(filename) > 20:
+                filename = filename[:20] + "..."
             self.open_polygon_text.set(filename)
-            self._polygon = filename
+#             self._polygon = filename
         
     def new_Input_Frame(self):
         if len(self._Input_Frames) < self._max_input:
@@ -97,22 +84,8 @@ class Main_Application(object):
             self._Input_Frames.append(self.frame)
         else:
             self.error(2)
-        
-#     def save_filename(self):
-#         
-#         filename = tkFileDialog.asksaveasfilename(filetypes = (("All files", "*.*")
-#                                                            ,("CSV files", "*.csv")), defaultextension = ".csv")
-#         if len(filename) > 0:
-#             #path = filename
-#             filename = filename.split('/')
-#             filename = filename[len(filename) - 1]
-#             self.save_filename_text.set(filename)
-#             self._save_filename = filename
             
     def slice_files(self):
-#         # get threshold value from text box
-#         threshold = float(self.threshold.get("1.0", 'end-1c'))
-#         _threshold = threshold
         
         if self._polygon == self._filename_default or self._Input_Frames[0]._filename == self._filename_default:
             self.error(3)
@@ -122,18 +95,29 @@ class Main_Application(object):
             
             # case where only one input file is used
             if len(self._Input_Frames) == 1:         
-                print "Do this stuff for only one input file"
                 
-            elif len(self._Input_Frames) > 1:
-                # read individual input XML files and product output            
-                for frames in self._Input_Frames:
-                    # if 'No file selected' skip
-                    if frames._filename == self._filename_default:
-                        continue
-                    current_filename = frames._filename.split('.')
-                    current_filename = current_filename[0] + '.csv'
-
-                    print "Do this stuff for more than one file"
+                output_file = self._Input_Frames[0]._filename
+                output_file = output_file.split('/')
+                output_file = output_file[len(output_file) - 1]
+                output_file =self._output_prefix + output_file
+            
+            # build list of polygon vertices from polygon XML file
+            polygon = slicer.polygon_parser(self._polygon)
+        
+            slicer.slicer(polygon, self._Input_Frames[0]._filename, output_file ) 
+            Popen(output_file, shell=True)   
+                
+#             elif len(self._Input_Frames) > 1:
+#                 # read individual input XML files and product output            
+#                 for frames in self._Input_Frames:
+#                     # if 'No file selected' skip
+#                     if frames._filename == self._filename_default:
+#                         continue
+#                     current_filename = frames._filename.split('.')
+#                     current_filename = current_filename[0] + '.csv'
+#                     print current_filename
+# 
+#                 print "Do this stuff for more than one file"
             
     def error(self, error_code):
         if error_code == 2:
@@ -160,14 +144,14 @@ class Input_Frame:
         self.open_filename_text.set(self._filename)
         
     def _set_filename(self):
-        filename = tkFileDialog.askopenfilename(filetypes = (("All files", "*.*")
-                                                         ,("CSV files", "*.CSV")))
-    
+        filename = tkFileDialog.askopenfilename(filetypes = (("CSV files", "*.CSV")
+                                                         ,("All files", "*.*")))
         if len(filename) > 0:
+            self._filename = filename
             filename = filename.split('/')
             filename = filename[len(filename) - 1]
             self.open_filename_text.set(filename)
-            self._filename = filename
+#             self._filename = filename
         
 def main(): 
     top = tk.Tk()
