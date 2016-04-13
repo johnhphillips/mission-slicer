@@ -98,14 +98,30 @@ class Main_Application(object):
                 
                 output_file = self._Input_Frames[0]._filename
                 output_file = output_file.split('/')
+                
+                path = output_file[:(len(output_file) - 1)]
+                
                 output_file = output_file[len(output_file) - 1]
-                output_file =self._output_prefix + output_file
+                output_file = self._output_prefix + output_file
+                
+                output_path = ''
+                
+                for i, part in enumerate(path):
+                    if i == 0:
+                        output_path = part
+                        continue
+                    
+                    output_path = output_path + '/' + part
+                    
+                output_path = output_path + '/' + output_file
+                    
+                input_file = self._Input_Frames[0]._filename
             
-            # build list of polygon vertices from polygon XML file
-            polygon = slicer.polygon_parser(self._polygon)
-        
-            slicer.slicer(polygon, self._Input_Frames[0]._filename, output_file ) 
-            Popen(output_file, shell=True)   
+                # build list of polygon vertices from polygon XML file
+                polygon = slicer.polygon_parser(self._polygon)
+                
+                slicer.slicer(polygon, input_file, output_path ) 
+                Popen(output_path, shell=True)   
                 
 #             elif len(self._Input_Frames) > 1:
 #                 # read individual input XML files and product output            
@@ -155,7 +171,7 @@ class Input_Frame:
         
 def main(): 
     top = tk.Tk()
-    top.title("Mission Slicer Tool v0.1")
+    top.title("Mission Slicer Tool v0.2")
     top.minsize(250, 100)
     top.iconbitmap('default.ico')
     Main_Application(top)

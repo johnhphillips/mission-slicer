@@ -1,28 +1,79 @@
+#Globals
+input_name = "State_PC_SSAM2.csv"
+# output_name = "test.csv"
+output_name = "SlicedadADCP.csv"
 
-import xml.etree.ElementTree as ET
+polygon = [[30.1833985, -85.8982186667], [30.178288, -85.8980861667], [30.1782625, -85.8930128333], [30.183373, -85.8930715]]
+constant = []
+multiple = []
 
-input_name = '20160401_India_ATR_SCM9_Box.xml'
+lat_col = ''
+lon_col = ''
 
-polygon = []
-valid_input = False
+def point_in_polygon(lat, lon):
+    
+    n = len(polygon)
+    odd_nodes = False
+    
+    p1y, p1x = polygon[0]
+    
+    for i in range(n + 1):
+        p2y, p2x = polygon[i % n]
+        if lat > min(p1y, p2y):
+            if lat <= max(p1y, p2y):
+                if lon <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (lat - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or lon <= xinters:
+                        odd_nodes = not odd_nodes
+        p1x,p1y = p2x,p2y
 
-message = ET.ElementTree(file = input_name)
+    return odd_nodes
 
-for area in message.iter(tag = '{http://www.saic.com/navy/miwml.1.0}PolygonArea'):
-    # mark as valid message type
-    valid_input = True
+# open file
+file = open(input_name, 'r')
+
+# create / open output file in write mode
+fout = open(output_name, 'w')
+    
+# empty list of rows
+rows = []
+      
+
+for index, line in enumerate(file):
+    # empty row of attributes
+    row = []
         
-    for part in area.iter():
-        # check for position
-        if part.tag == '{http://www.saic.com/navy/miwml.1.0}Position':
-            coord = []
-            for vertex in part:
-                coord.append(float(vertex.text))
-            polygon.append(coord)
-            
-if valid_input == False:
-    print "Error. Invalid Polygon XML File."
+    current_row = line.split(',')
+    
+    # find lat / long column for given CSV file in header row
+    # assumption that header is present
+    if index == 0:
+        for index, label in enumerate(current_row):
+            if label == "latitude":
+                lat_col = index 
+            if label == "longitude":
+                lon_col = index
+        fout.write(line)
+        #fout.write('\n')
+        # move to first data row
+        continue
+        
+    lat = float(current_row[lat_col])
+    lon = float(current_row[lon_col])
 
-lats = [coord[0] for coord in polygon]
-lons = [coord[1] for coord in polygon]
-  
+
+    # add header information to XML file
+    if point_in_polygon(lat, lon) is True:
+#         fout.write(str(lat) + ',' + str(lon) + ', True,' + str(lat) + ',' + str(lon) + '\n')
+        fout.write(line)
+      #  fout.write('\n')
+#     else:
+#         fout.write(str(lat) + ',' + str(lon) + '\n')
+
+        
+file.close()
+fout.close()
+
+
+

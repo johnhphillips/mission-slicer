@@ -1,16 +1,4 @@
-import myattributes as MA
 import xml.etree.ElementTree as ET
-
-input_csv = "ADCP.csv"
-input_polygon = "20160401_India_ATR_SCM9_Box"
-
-OUTPUT_PREFIX = "Sliced_"
-output_name = OUTPUT_PREFIX + input_csv
-
-
-#polygon = [[32.57143, -117.17983], [32.57143, -117.19168], [32.56199, -117.19168], [32.56199, -117.17983]]
-
-
 
 # function for parsing polygon XML file
 def polygon_parser(input_name):  
@@ -34,32 +22,37 @@ def polygon_parser(input_name):
             
     if valid_input == False:
         print "Error. Invalid Polygon XML File." 
+    
 
     return polygon      
 
-def point_in_polygon(lat, lon, lats, lons):
-    
-    j = len(lats) - 1
-    
-    odd_nodes = False
+def point_in_polygon(lat, lon, polygon):
 
-    for i, coord in enumerate(lats):
-        if ((lons[i] < lon) and (lons[j] >= lon) or ((lons[j] < lon) and (lons[i] >= lon))):
-            if (((lats[i] + lon - lons[i]) / (lons[j] - lons[i]) * (lats[j] - lats[i])) < lat):
-                odd_nodes = True
-        j = i
+    n = len(polygon)
+    odd_nodes = False
+    
+    p1y, p1x = polygon[0]
+    
+    for i in range(n + 1):
+        p2y, p2x = polygon[i % n]
+        if lat > min(p1y, p2y):
+            if lat <= max(p1y, p2y):
+                if lon <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (lat - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or lon <= xinters:
+                        odd_nodes = not odd_nodes
+        p1x,p1y = p2x,p2y
 
     return odd_nodes
 
 def slicer(polygon, input_file, output_file):
-    lats = [coord[0] for coord in polygon]
-    lons = [coord[1] for coord in polygon]
     
     # open file
     file = open(input_file, 'r')
 
     # create / open output file in write mode
-    fout = open(output_name, 'w')
+    fout = open(output_file, 'w')
     
     # empty list of rows
     rows = []
@@ -88,19 +81,21 @@ def slicer(polygon, input_file, output_file):
         lat = float(current_row[lat_col])
         lon = float(current_row[lon_col])
     
-        cur_value = point_in_polygon(lat, lon, lats, lons)
-    
+        if point_in_polygon(lat, lon, polygon) is True:
+            fout.write(line)
+        cur_value = point_in_polygon(lat, lon, polygon)
+     
         if index == 1:
             pre_value = cur_value
-    
+     
         if cur_value is True:
             fout.write(line)
             pre_value = cur_value
-        
+         
         elif cur_value is False and pre_value is True:
             fout.write("-----\n") 
             pre_value = False
-        
+#         
     file.close()
     fout.close()
 
