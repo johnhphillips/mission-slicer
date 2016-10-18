@@ -166,12 +166,15 @@ class Input_Frame:
             self._filename = filename
             filename = filename.split('/')
             filename = filename[len(filename) - 1]
+            if len(filename) > 20:
+                filename = filename[:20] + "..."
             self.open_filename_text.set(filename)
 #             self._filename = filename
-        
+      
+# 0.2 to 0.3 one line change to eliminate duplicate point bug  
 def main(): 
     top = tk.Tk()
-    top.title("Mission Slicer Tool v0.2")
+    top.title("Mission Slicer Tool v0.3")
     top.minsize(250, 100)
     top.iconbitmap('default.ico')
     Main_Application(top)
